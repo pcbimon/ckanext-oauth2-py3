@@ -27,7 +27,7 @@ import os
 from functools import partial
 from ckan import plugins
 from ckan.common import g
-from ckan.toolkit import toolkit
+from ckan.plugins.toolkit import toolkit
 from urllib.parse import urlparse
 
 log = logging.getLogger(__name__)
