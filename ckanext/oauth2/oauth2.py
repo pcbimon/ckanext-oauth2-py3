@@ -38,7 +38,7 @@ import six
 
 import jwt
 
-import constants
+from . import constants
 
 
 log = logging.getLogger(__name__)
