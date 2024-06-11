@@ -85,10 +85,10 @@ def _get_previous_page(default_page):
 
 class OAuth2Plugin(plugins.SingletonPlugin):
 
-    plugins.implements(plugins.IAuthenticator)
+    plugins.implements(plugins.IAuthenticator, inherit=True)
     plugins.implements(plugins.IAuthFunctions, inherit=True)
     plugins.implements(plugins.IRoutes, inherit=True)
-    plugins.implements(plugins.IConfigurer)
+    plugins.implements(plugins.IConfigurer, inherit=True)
 
     def __init__(self, name=None):
         '''Store the OAuth 2 client configuration'''
