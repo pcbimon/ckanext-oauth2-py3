@@ -28,6 +28,7 @@ from functools import partial
 import ckan.plugins as plugins
 from ckan.common import g
 import ckan.plugins.toolkit as toolkit
+from . import controller as oauth2_controller
 from urllib.parse import urlparse
 
 log = logging.getLogger(__name__)
@@ -100,13 +101,13 @@ class OAuth2Plugin(plugins.SingletonPlugin):
         log.debug('Setting up the redirections to the OAuth2 service')
 
         m.connect('/user/login',
-                  controller='ckanext.oauth2.controller:OAuth2Controller',
+                  controller=oauth2_controller,
                   action='login')
 
         # We need to handle petitions received to the Callback URL
         # since some error can arise and we need to process them
         m.connect('/oauth2/callback',
-                  controller='ckanext.oauth2.controller:OAuth2Controller',
+                  controller=oauth2_controller,
                   action='callback')
 
         # Redirect the user to the OAuth service register page
