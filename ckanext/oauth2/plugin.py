@@ -25,9 +25,9 @@ from . import oauth2
 import os
 
 from functools import partial
-from ckan import plugins
+import ckan.plugins as plugins
 from ckan.common import g
-from ckan.plugins.toolkit import toolkit
+import ckan.plugins.toolkit as toolkit
 from urllib.parse import urlparse
 
 log = logging.getLogger(__name__)
@@ -86,8 +86,8 @@ def _get_previous_page(default_page):
 class OAuth2Plugin(plugins.SingletonPlugin):
 
     plugins.implements(plugins.IAuthenticator)
-    plugins.implements(plugins.IAuthFunctions)
-    plugins.implements(plugins.IRoutes)
+    plugins.implements(plugins.IAuthFunctions, inherit=True)
+    plugins.implements(plugins.IRoutes, inherit=True)
     plugins.implements(plugins.IConfigurer)
 
     def __init__(self, name=None):
