@@ -83,14 +83,13 @@ setup(
         'selenium==3.5.0'
     ],
     test_suite='nosetests',
-    entry_points={
-        'ckan.plugins': [
-            'oauth2 = ckanext.oauth2.plugin:OAuth2Plugin',
-        ],
-        'nose.plugins': [
-            'pylons = pylons.test:PylonsPlugin'
-        ]
-    },
+    entry_points='''
+        [ckan.plugins]
+        oauth2 = ckanext.oauth2.plugin:OAuth2Plugin
+
+        [nose.plugins]
+        pylons = pylons.test:PylonsPlugin
+    ''',
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Environment :: Web Environment",
