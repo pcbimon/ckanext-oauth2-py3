@@ -25,7 +25,7 @@ from . import oauth2
 import os
 
 from functools import partial
-from ckan import plugins
+from ckan.plugins import plugins
 from ckan.common import g
 from ckan.plugins import toolkit
 from urllib.parse import urlparse
