@@ -24,7 +24,7 @@ import unittest
 import os
 from subprocess import Popen
 import time
-from urlparse import urljoin
+from urllib.parse import urljoin
 
 from parameterized import parameterized
 import requests
