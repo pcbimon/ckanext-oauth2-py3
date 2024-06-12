@@ -19,7 +19,7 @@
 # along with OAuth2 CKAN Extension.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from __future__ import unicode_literals
+
 
 import base64
 import ckan.model as model
@@ -45,7 +45,7 @@ log = logging.getLogger(__name__)
 
 
 def generate_state(url):
-    return b64encode(bytes(json.dumps({constants.CAME_FROM_FIELD: url})))
+    return b64encode(str.encode(json.dumps({constants.CAME_FROM_FIELD: url})))
 
 
 def get_came_from(state):
@@ -97,7 +97,7 @@ class OAuth2Helper(object):
         auth_url, _ = oauth.authorization_url(self.authorization_endpoint)
         log.debug('Challenge: Redirecting challenge to page {0}'.format(auth_url))
         # CKAN 2.6 only supports bytes
-        return toolkit.redirect_to(auth_url.encode('utf-8'))
+        return toolkit.redirect_to(auth_url)
 
     def get_token(self):
         oauth = OAuth2Session(self.client_id, redirect_uri=self.redirect_uri, scope=self.scope)
@@ -133,7 +133,7 @@ class OAuth2Helper(object):
 
         if self.jwt_enable:
 
-            access_token = bytes(token['access_token'])
+            access_token = token['access_token']
             user_data = jwt.decode(access_token, verify=False)
             user = self.user_json(user_data)
         else:
@@ -171,6 +171,7 @@ class OAuth2Helper(object):
         return user.name
 
     def user_json(self, user_data):
+        log.debug(f'user_json: {user_data}')
         email = user_data[self.profile_api_mail_field]
         user_name = user_data[self.profile_api_user_field]
 
@@ -214,15 +215,14 @@ class OAuth2Helper(object):
         rememberer = self._get_rememberer(environ)
         identity = {'repoze.who.userid': user_name}
         headers = rememberer.remember(environ, identity)
-        for header, value in headers:
-            toolkit.response.headers.add(header, value)
+        # for header, value in headers:
+        #     toolkit.response.headers.add(header, value)
 
     def redirect_from_callback(self):
         '''Redirect to the callback URL after a successful authentication.'''
         state = toolkit.request.params.get('state')
         came_from = get_came_from(state)
-        toolkit.response.status = 302
-        toolkit.response.location = came_from
+        toolkit.redirect_to(came_from)
 
     def get_stored_token(self, user_name):
         user_token = db.UserToken.by_user_name(user_name=user_name)

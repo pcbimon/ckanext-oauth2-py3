@@ -108,7 +108,7 @@ class PluginTest(unittest.TestCase):
             self.assertIn(auth_function, EXPECTED_AUTH_FUNCTIONS)
             function_result = auth_functions[auth_function]({'user': 'test'}, {})
             self.assertIn('success', function_result)
-            self.assertEquals(False, function_result['success'])
+            self.assertEqual(False, function_result['success'])
 
     @parameterized.expand([
         ({},                                              None,                      None,    None,    False),
@@ -188,18 +188,18 @@ class PluginTest(unittest.TestCase):
         elif not oauth2 and CUSTOM_AUTHORIZATION_HEADER in headers:
             self._plugin.oauth2helper.identify.assert_called_once_with({'access_token': headers[CUSTOM_AUTHORIZATION_HEADER]})
         else:
-            self.assertEquals(0, self._plugin.oauth2helper.identify.call_count)
+            self.assertEqual(0, self._plugin.oauth2helper.identify.call_count)
 
-        self.assertEquals(expected_user, g_mock.user)
-        self.assertEquals(expected_user, plugin.toolkit.c.user)
+        self.assertEqual(expected_user, g_mock.user)
+        self.assertEqual(expected_user, plugin.toolkit.c.user)
 
         if expected_user is None:
             self.assertIsNone(plugin.toolkit.c.usertoken)
             self.assertIsNone(plugin.toolkit.c.usertoken_refresh)
         else:
-            self.assertEquals(usertoken, plugin.toolkit.c.usertoken)
+            self.assertEqual(usertoken, plugin.toolkit.c.usertoken)
 
             # method 'usertoken_refresh' should relay on the one provided by the repoze.who module
             plugin.toolkit.c.usertoken_refresh()
             self._plugin.oauth2helper.refresh_token.assert_called_once_with(expected_user)
-            self.assertEquals(newtoken, plugin.toolkit.c.usertoken)
+            self.assertEqual(newtoken, plugin.toolkit.c.usertoken)

@@ -55,5 +55,5 @@ class DBTest(unittest.TestCase):
         db.init_db(model)
 
         # Assert that table method has been called
-        self.assertEquals(0, db.sa.Table.call_count)
-        self.assertEquals(0, model.meta.mapper.call_count)
+        self.assertEqual(0, db.sa.Table.call_count)
+        self.assertEqual(0, model.meta.mapper.call_count)

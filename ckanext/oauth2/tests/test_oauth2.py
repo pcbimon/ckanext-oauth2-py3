@@ -18,13 +18,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OAuth2 CKAN Extension.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import print_function, unicode_literals
+
 
 from base64 import b64encode, urlsafe_b64encode
 import json
 import os
 import unittest
-from urllib import urlencode
+from urllib.parse import urlencode
 
 import ckanext.oauth2.oauth2 as oauth2
 from ckanext.oauth2.oauth2 import OAuth2Helper
@@ -152,7 +152,7 @@ class OAuth2PluginTest(unittest.TestCase):
 
         for key in token:
             self.assertIn(key, retrieved_token)
-            self.assertEquals(token[key], retrieved_token[key])
+            self.assertEqual(token[key], retrieved_token[key])
 
     @patch('ckanext.oauth2.oauth2.OAuth2Session')
     def test_get_token_legacy_idm(self, OAuth2Session):
@@ -238,7 +238,7 @@ class OAuth2PluginTest(unittest.TestCase):
 
         for key in token:
             self.assertIn(key, retrieved_token)
-            self.assertEquals(token[key], retrieved_token[key])
+            self.assertEqual(token[key], retrieved_token[key])
 
     @httpretty.activate
     def test_get_token_error(self):
@@ -358,7 +358,7 @@ class OAuth2PluginTest(unittest.TestCase):
         returned_username = helper.identify(OAUTH2TOKEN)
 
         # The function must return the user name
-        self.assertEquals(username, returned_username)
+        self.assertEqual(username, returned_username)
 
         # Asserts
         oauth2.model.User.by_email.assert_called_once_with(email)
@@ -367,18 +367,18 @@ class OAuth2PluginTest(unittest.TestCase):
         if not user_exists:
             oauth2.model.User.assert_called_once_with(email=email)
         else:
-            self.assertEquals(0, oauth2.model.User.called)
+            self.assertEqual(0, oauth2.model.User.called)
 
         # Check that user properties are set properly
-        self.assertEquals(username, user.name)
-        self.assertEquals(email, user.email)
+        self.assertEqual(username, user.name)
+        self.assertEqual(email, user.email)
         if sysadmin is not None:
-            self.assertEquals(sysadmin, user.sysadmin)
+            self.assertEqual(sysadmin, user.sysadmin)
 
         if fullname and fullname_field:
-            self.assertEquals(fullname, user.fullname)
+            self.assertEqual(fullname, user.fullname)
         else:
-            self.assertEquals(None, user.fullname)
+            self.assertEqual(None, user.fullname)
 
         # Check that the user is saved
         oauth2.model.Session.add.assert_called_once_with(user)
@@ -402,7 +402,7 @@ class OAuth2PluginTest(unittest.TestCase):
 
         returned_username = helper.identify(token)
 
-        self.assertEquals(user_data[self._user_field], returned_username)
+        self.assertEqual(user_data[self._user_field], returned_username)
 
         oauth2.model.Session.add.assert_called_once_with(user)
         oauth2.model.Session.commit.assert_called_once()
@@ -426,7 +426,7 @@ class OAuth2PluginTest(unittest.TestCase):
         except Exception as e:
             if user_info['error'] == 'invalid_token':
                 self.assertIsInstance(e, ValueError)
-                self.assertEquals(user_info['error_description'], e.message)
+                self.assertEqual(user_info['error_description'], e.message)
             exception_risen = True
 
         self.assertTrue(exception_risen)
@@ -479,7 +479,7 @@ class OAuth2PluginTest(unittest.TestCase):
         usertoken.refresh_token = OAUTH2TOKEN['refresh_token']
 
         oauth2.db.UserToken.by_user_name = MagicMock(return_value=usertoken)
-        self.assertEquals(OAUTH2TOKEN, helper.get_stored_token('user'))
+        self.assertEqual(OAUTH2TOKEN, helper.get_stored_token('user'))
 
     @parameterized.expand([
         ({'came_from': 'http://localhost/dataset'}, ),
@@ -493,8 +493,8 @@ class OAuth2PluginTest(unittest.TestCase):
         helper = self._helper()
         helper.redirect_from_callback()
 
-        self.assertEquals(302, oauth2.toolkit.response.status)
-        self.assertEquals(came_from, oauth2.toolkit.response.location)
+        self.assertEqual(302, oauth2.toolkit.response.status)
+        self.assertEqual(came_from, oauth2.toolkit.response.location)
 
     @parameterized.expand([
         (True, True),
@@ -536,11 +536,11 @@ class OAuth2PluginTest(unittest.TestCase):
 
             # Check that the object contains the correct information
             tk = oauth2.model.Session.add.call_args_list[0][0][0]
-            self.assertEquals(user, tk.user_name)
-            self.assertEquals(newtoken['access_token'], tk.access_token)
-            self.assertEquals(newtoken['token_type'], tk.token_type)
-            self.assertEquals(newtoken['expires_in'], tk.expires_in)
-            self.assertEquals(newtoken['refresh_token'], tk.refresh_token)
+            self.assertEqual(user, tk.user_name)
+            self.assertEqual(newtoken['access_token'], tk.access_token)
+            self.assertEqual(newtoken['token_type'], tk.token_type)
+            self.assertEqual(newtoken['expires_in'], tk.expires_in)
+            self.assertEqual(newtoken['refresh_token'], tk.refresh_token)
         else:
             newtoken = {
                 'access_token': 'new_access_token',
@@ -557,11 +557,11 @@ class OAuth2PluginTest(unittest.TestCase):
 
             # Check that the object contains the correct information
             tk = oauth2.model.Session.add.call_args_list[0][0][0]
-            self.assertEquals(user, tk.user_name)
-            self.assertEquals(newtoken['access_token'], tk.access_token)
-            self.assertEquals(newtoken['token_type'], tk.token_type)
-            self.assertEquals(3600, tk.expires_in)
-            self.assertEquals(newtoken['refresh_token'], tk.refresh_token)
+            self.assertEqual(user, tk.user_name)
+            self.assertEqual(newtoken['access_token'], tk.access_token)
+            self.assertEqual(newtoken['token_type'], tk.token_type)
+            self.assertEqual(3600, tk.expires_in)
+            self.assertEqual(newtoken['refresh_token'], tk.refresh_token)
 
 
     @parameterized.expand([
@@ -598,16 +598,16 @@ class OAuth2PluginTest(unittest.TestCase):
         result = helper.refresh_token(username)
 
         if user_exists:
-            self.assertEquals(newtoken, result)
+            self.assertEqual(newtoken, result)
             helper.get_stored_token.assert_called_once_with(username)
             oauth2.OAuth2Session.assert_called_once_with(helper.client_id, token=current_token, scope=helper.scope)
             session.refresh_token.assert_called_once_with(helper.token_endpoint, client_secret=helper.client_secret, client_id=helper.client_id, verify=True)
             helper.update_token.assert_called_once_with(username, newtoken)
         else:
             self.assertIsNone(result)
-            self.assertEquals(0, oauth2.OAuth2Session.call_count)
-            self.assertEquals(0, session.refresh_token.call_count)
-            self.assertEquals(0, helper.update_token.call_count)
+            self.assertEqual(0, oauth2.OAuth2Session.call_count)
+            self.assertEqual(0, session.refresh_token.call_count)
+            self.assertEqual(0, helper.update_token.call_count)
 
     @patch.dict(os.environ, {'OAUTHLIB_INSECURE_TRANSPORT': ''})
     def test_refresh_token_invalid_cert(self):

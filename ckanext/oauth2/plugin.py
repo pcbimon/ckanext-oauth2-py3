@@ -17,19 +17,17 @@
 
 # You should have received a copy of the GNU Affero General Public License
 # along with OAuth2 CKAN Extension.  If not, see <http://www.gnu.org/licenses/>.
-
-from __future__ import unicode_literals
-
+from functools import partial
 import logging
-from . import oauth2
 import os
 
-from functools import partial
-import ckan.plugins as plugins
+from ckan import plugins
 from ckan.common import g
-import ckan.plugins.toolkit as toolkit
-from . import controller as oauth2_controller
-from urllib.parse import urlparse
+from ckan.plugins import toolkit
+from flask import Blueprint
+
+from ckanext.oauth2.oauth2 import OAuth2Helper
+from ckanext.oauth2.controller import OAuth2Controller
 
 log = logging.getLogger(__name__)
 
@@ -63,51 +61,47 @@ def request_reset(context, data_dict):
     return _no_permissions(context, msg)
 
 
-def _get_previous_page(default_page):
-    if 'came_from' not in toolkit.request.params:
-        came_from_url = toolkit.request.headers.get('Referer', default_page)
-    else:
-        came_from_url = toolkit.request.params.get('came_from', default_page)
-
-    came_from_url_parsed = urlparse(came_from_url)
-
-    # Avoid redirecting users to external hosts
-    if came_from_url_parsed.netloc != '' and came_from_url_parsed.netloc != toolkit.request.host:
-        came_from_url = default_page
-
-    # When a user is being logged and REFERER == HOME or LOGOUT_PAGE
-    # he/she must be redirected to the dashboard
-    pages = ['/', '/user/logged_out_redirect']
-    if came_from_url_parsed.path in pages:
-        came_from_url = default_page
-
-    return came_from_url
-
-
 class OAuth2Plugin(plugins.SingletonPlugin):
 
     plugins.implements(plugins.IAuthenticator, inherit=True)
     plugins.implements(plugins.IAuthFunctions, inherit=True)
     plugins.implements(plugins.IRoutes, inherit=True)
-    plugins.implements(plugins.IConfigurer, inherit=True)
+    plugins.implements(plugins.IConfigurer)
+    plugins.implements(plugins.IBlueprint)
 
     def __init__(self, name=None):
         '''Store the OAuth 2 client configuration'''
         log.debug('Init OAuth2 extension')
 
-        self.oauth2helper = oauth2.OAuth2Helper()
+        self.oauth2helper = OAuth2Helper()
+
+    def get_blueprint(self):
+        log.debug('Setting up Blueprint rules to redirect to OAuth2 service')
+
+        blueprint = Blueprint(self.name, self.__module__)
+        blueprint.template_folder = u'templates'
+        controller = OAuth2Controller()
+
+        rules = [
+            (u'/user/login', u'user_login', controller.login),
+            (u'/oauth2/callback', u'oauth2_callback', controller.callback)
+        ]
+        for rule in rules:
+            blueprint.add_url_rule(*rule)
+
+        return blueprint
 
     def before_map(self, m):
         log.debug('Setting up the redirections to the OAuth2 service')
 
         m.connect('/user/login',
-                  controller=oauth2_controller,
+                  controller='ckanext.oauth2.controller:OAuth2Controller',
                   action='login')
 
         # We need to handle petitions received to the Callback URL
         # since some error can arise and we need to process them
         m.connect('/oauth2/callback',
-                  controller=oauth2_controller,
+                  controller='ckanext.oauth2.controller:OAuth2Controller',
                   action='callback')
 
         # Redirect the user to the OAuth service register page
