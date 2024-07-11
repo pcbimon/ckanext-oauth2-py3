@@ -213,7 +213,8 @@ class OAuth2Helper(object):
         # Update sysadmin status
         if self.profile_api_groupmembership_field != "" and self.profile_api_groupmembership_field in user_data:
             user.sysadmin = self.sysadmin_group_name in user_data[self.profile_api_groupmembership_field]
-
+        # Add plugin_extras columns
+        user.plugin_extras = dict('oauth2', user_data)
         return user
 
     def _get_rememberer(self, environ):
