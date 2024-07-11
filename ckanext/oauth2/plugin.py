@@ -117,7 +117,7 @@ class OAuth2Plugin(plugins.SingletonPlugin):
 
     def get_blueprint(self):
         log.debug('Setting up Blueprint rules to redirect to OAuth2 service')
-
+        log.debug('Name: %s' % self.name)
         blueprint = Blueprint(self.name, self.__module__)
         blueprint.template_folder = u'templates'
         controller = OAuth2Controller()
@@ -131,7 +131,7 @@ class OAuth2Plugin(plugins.SingletonPlugin):
         ]
         for rule in rules:
             blueprint.add_url_rule(*rule)
-
+        log.debug('Blueprint rules added')
         return blueprint
 
     # def before_map(self, m):
