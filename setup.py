@@ -35,25 +35,6 @@ PYPI_RST_FILTERS = (
 )
 
 
-def rst(filename):
-    '''
-    Load rst file and sanitize it for PyPI.
-    Remove unsupported github tags:
-     - code-block directive
-     - travis ci build badge
-    '''
-    content = open(filename).read()
-    for regex, replacement in PYPI_RST_FILTERS:
-        content = re.sub(regex, replacement, content)
-    return content
-
-
-# long_description = '\n'.join((
-#     rst('README.md'),
-#     rst('CHANGELOG.rst'),
-#     ''
-# ))
-
 setup(
     name='ckanext-oauth2',
     version=__version__,
