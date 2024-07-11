@@ -1,9 +1,6 @@
 {% ckan_extends %}
 {% block form %}
-<div class="row">
-    <div class="d-grid gap-2 col-6 mx-auto">
-        <button class="btn btn-primary" type="button">Login with Mahidol Account</button>
-      </div>
-</div>
+{% snippets 'snippets/login_mu_form.html' %}
+<hr>
 {{ super() }}
 {% endblock %}
