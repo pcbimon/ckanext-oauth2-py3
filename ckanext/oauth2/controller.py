@@ -26,6 +26,7 @@ from . import constants
 from ckan.common import session
 import ckan.lib.helpers as helpers
 import ckan.plugins.toolkit as toolkit
+from oauthlib.oauth2.rfc6749.errors import InsufficientScopeError
 
 from ckanext.oauth2 import oauth2
 from ckanext.oauth2.utils import get_previous_page
@@ -51,27 +52,39 @@ class OAuth2Controller:
         came_from_url = get_previous_page(constants.INITIAL_PAGE)
 
         return self.oauth2helper.challenge(came_from_url)
-
+    def logout(self):
+        # Redirect to OAuth2 provider logout URL
+        self.oauth2helper.logout()
+    def not_authorized(self):
+        return toolkit.render('not_authorized.html')
     def callback(self):
+        log.debug('Callback called')
         try:
-            log.debug('attempting to handle callback')
             token = self.oauth2helper.get_token()
-            log.debug(f'got token: {token}')
             user_name = self.oauth2helper.identify(token)
-            log.debug(f'got username: {user_name}')
             self.oauth2helper.remember(user_name)
             self.oauth2helper.update_token(user_name, token)
-            return self.oauth2helper.redirect_from_callback()
+            self.oauth2helper.redirect_from_callback()
+        except InsufficientScopeError as e:
+            redirect_url = '/user/not_authorized'
+            # toolkit.response.status_int = e.status_code
+            # toolkit.response.location = redirect_url
+            return toolkit.redirect_to(redirect_url)
         except Exception as e:
-
+            log.exception(e)
             session.save()
 
             # If the callback is called with an error, we must show the message
-            log.debug(f'original err: {e}')
-            error_description = toolkit.request.get_data()
-            log.debug(f'request data: {error_description}')
+            error_description = toolkit.request.GET.get('error_description')
             if not error_description:
-                error_description = str(e)
+                if e.message:
+                    error_description = e.message
+                elif hasattr(e, 'description') and e.description:
+                    error_description = e.description
+                elif hasattr(e, 'error') and e.error:
+                    error_description = e.error
+                else:
+                    error_description = type(e).__name__
 
             toolkit.response.status_int = 302
             redirect_url = oauth2.get_came_from(toolkit.request.params.get('state'))

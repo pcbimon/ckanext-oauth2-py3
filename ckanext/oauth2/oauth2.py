@@ -26,7 +26,6 @@ import ckan.model as model
 from . import db
 import json
 import logging
-from six.moves.urllib.parse import urljoin
 import os
 
 from base64 import b64encode, b64decode
@@ -44,11 +43,11 @@ from . import constants
 log = logging.getLogger(__name__)
 
 
-def generate_state(url):
+def generate_state(url: str):
     return b64encode(str.encode(json.dumps({constants.CAME_FROM_FIELD: url})))
 
 
-def get_came_from(state):
+def get_came_from(state: str):
     return json.loads(b64decode(state)).get(constants.CAME_FROM_FIELD, '/')
 
 
@@ -79,7 +78,9 @@ class OAuth2Helper(object):
         self.profile_api_groupmembership_field = six.text_type(os.environ.get('CKAN_OAUTH2_PROFILE_API_GROUPMEMBERSHIP_FIELD', toolkit.config.get('ckan.oauth2.profile_api_groupmembership_field', ''))).strip()
         self.sysadmin_group_name = six.text_type(os.environ.get('CKAN_OAUTH2_SYSADMIN_GROUP_NAME', toolkit.config.get('ckan.oauth2.sysadmin_group_name', ''))).strip()
 
-        self.redirect_uri = urljoin(urljoin(toolkit.config.get('ckan.site_url', 'http://localhost:5000'), toolkit.config.get('ckan.root_path')), constants.REDIRECT_URL)
+        self.redirect_uri = six.text_type(os.environ.get('CKAN_OAUTH2_REDIRECT_URL', toolkit.config.get('ckan.oauth2.redirect_url', ''))).strip()
+        self.logout_redirect = six.text_type(os.environ.get('CKAN_OAUTH2_LOGOUT_REDIRECT', toolkit.config.get('ckan.oauth2.logout_redirect', ''))).strip()
+        self.logout_url = six.text_type(os.environ.get('CKAN_OAUTH2_LOGOUT_URL', toolkit.config.get('ckan.oauth2.logout_url', ''))).strip()
 
         # Init db
         db.init_db(model)
@@ -98,7 +99,22 @@ class OAuth2Helper(object):
         log.debug('Challenge: Redirecting challenge to page {0}'.format(auth_url))
         # CKAN 2.6 only supports bytes
         return toolkit.redirect_to(auth_url)
-
+    def logout(self):
+        environ = toolkit.request.environ
+        user_name = None
+        if user_name is None and 'repoze.who.identity' in environ:
+            user_name = environ['repoze.who.identity']['repoze.who.userid']
+            log.info('User %s logged using session' % user_name)
+        if user_name is not None:
+            identity = {'repoze.who.userid': user_name}
+            headers = self._get_rememberer(environ).forget(environ,identity)
+            for header, value in headers:
+                toolkit.response.headers.add(header, value)
+            log.info('User %s logged out' % user_name)
+        # Redirect to the logout URL
+        url = self.logout_url+'?post_logout_redirect_uri='+self.logout_redirect.encode('utf-8')
+        log.debug('Logout: Redirecting to page {0}'.format(url))
+        return toolkit.redirect_to(url.encode('utf-8'))
     def get_token(self):
         oauth = OAuth2Session(self.client_id, redirect_uri=self.redirect_uri, scope=self.scope)
 
@@ -204,7 +220,7 @@ class OAuth2Helper(object):
         plugins = environ.get('repoze.who.plugins', {})
         return plugins.get(self.rememberer_name)
 
-    def remember(self, user_name):
+    def remember(self, user_name: str):
         '''
         Remember the authenticated identity.
 
@@ -214,7 +230,7 @@ class OAuth2Helper(object):
         environ = toolkit.request.environ
         rememberer = self._get_rememberer(environ)
         identity = {'repoze.who.userid': user_name}
-        headers = rememberer.remember(environ, identity)
+        rememberer.remember(environ, identity)
         # for header, value in headers:
         #     toolkit.response.headers.add(header, value)
 

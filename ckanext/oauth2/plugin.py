@@ -28,7 +28,16 @@ from flask import Blueprint
 
 from ckanext.oauth2.oauth2 import OAuth2Helper
 from ckanext.oauth2.controller import OAuth2Controller
-
+import ckan.lib.navl.dictization_functions as df
+from ckan.model import (PACKAGE_NAME_MAX_LENGTH)
+from ckan.common import _
+from six import string_types
+import re
+Invalid = df.Invalid
+Missing = df.Missing
+missing = df.missing
+# Allow alphanumeric characters, spaces, dashes, and dots
+name_match = re.compile('[a-zA-Z0-9_\-\. ]+$')
 log = logging.getLogger(__name__)
 
 
@@ -39,14 +48,31 @@ def _no_permissions(context, msg):
 
 @toolkit.auth_sysadmins_check
 def user_create(context, data_dict):
-    msg = toolkit._('Users cannot be created.')
-    return _no_permissions(context, msg)
+    log.debug('Checking if the user can be created')
+    log.debug('User Request Is Admin? : %s' % (context['auth_user_obj'].sysadmin == True))
+    try:
+        if not context['auth_user_obj'].sysadmin:
+            msg = toolkit._('Only system administrators can create users')
+            return _no_permissions(context, msg)
+        else:
+            return {'success': True}
+    except Exception as e:
+        return _no_permissions(context, msg)
 
 
 @toolkit.auth_sysadmins_check
 def user_update(context, data_dict):
-    msg = toolkit._('Users cannot be edited.')
-    return _no_permissions(context, msg)
+    log.debug('Checking if the user can be updated')
+    log.debug('User Request Is Admin? : %s' % (context['auth_user_obj'].sysadmin == True))
+    try:
+        if not context['auth_user_obj'].sysadmin:
+            msg = toolkit._('Only system administrators can update users')
+            return _no_permissions(context, msg)
+        else:
+            return {'success': True}
+    except Exception as e:
+        return _no_permissions(context, msg)
+        
 
 
 @toolkit.auth_sysadmins_check
@@ -60,6 +86,21 @@ def request_reset(context, data_dict):
     msg = toolkit._('Users cannot reset passwords.')
     return _no_permissions(context, msg)
 
+def name_validator(value, context):
+    if not isinstance(value, string_types):
+        raise Invalid(_('Names must be strings'))
+
+    # check basic textual rules
+    if value in ['new', 'edit', 'search']:
+        raise Invalid(_('That name cannot be used'))
+    if len(value) < 2:
+        raise Invalid(_('Must be at least %s characters long') % 2)
+    if len(value) > PACKAGE_NAME_MAX_LENGTH:
+        raise Invalid(_('Name must be a maximum of %i characters long') % \
+                      PACKAGE_NAME_MAX_LENGTH)
+    if not name_match.match(value):
+        raise Invalid(_('Name must be alphanumeric characters, dashes, or dots only'))
+    return value
 
 class OAuth2Plugin(plugins.SingletonPlugin):
 
@@ -94,15 +135,21 @@ class OAuth2Plugin(plugins.SingletonPlugin):
     def before_map(self, m):
         log.debug('Setting up the redirections to the OAuth2 service')
 
-        m.connect('/user/login',
+        m.connect('/user/login/oauth2',
                   controller='ckanext.oauth2.controller:OAuth2Controller',
                   action='login')
 
         # We need to handle petitions received to the Callback URL
         # since some error can arise and we need to process them
-        m.connect('/oauth2/callback',
+        m.connect('/authen-service/OAuthCallback',
                   controller='ckanext.oauth2.controller:OAuth2Controller',
                   action='callback')
+        m.connect('/user/logout/oauth2',
+                  controller='ckanext.oauth2.controller:OAuth2Controller',
+                  action='logout')
+        m.connect('/user/not_authorized',
+                  controller='ckanext.oauth2.controller:OAuth2Controller',
+                  action='not_authorized')
 
         # Redirect the user to the OAuth service register page
         if self.register_url:
@@ -121,7 +168,7 @@ class OAuth2Plugin(plugins.SingletonPlugin):
     def identify(self):
         log.debug('identify')
 
-        def _refresh_and_save_token(user_name):
+        def _refresh_and_save_token(user_name:str):
             new_token = self.oauth2helper.refresh_token(user_name)
             if new_token:
                 toolkit.c.usertoken = new_token
@@ -174,7 +221,13 @@ class OAuth2Plugin(plugins.SingletonPlugin):
         self.reset_url = os.environ.get("CKAN_OAUTH2_RESET_URL", config.get('ckan.oauth2.reset_url', None))
         self.edit_url = os.environ.get("CKAN_OAUTH2_EDIT_URL", config.get('ckan.oauth2.edit_url', None))
         self.authorization_header = os.environ.get("CKAN_OAUTH2_AUTHORIZATION_HEADER", config.get('ckan.oauth2.authorization_header', 'Authorization')).lower()
-
+        config['ckan.auth.public_user_details'] = False
+        config['ckan.auth.create_user_via_web'] = False
+        config['ckan.auth.create_user_via_api']= False
         # Add this plugin's templates dir to CKAN's extra_template_paths, so
         # that CKAN will use this plugin's custom templates.
         plugins.toolkit.add_template_directory(config, 'templates')
+        plugins.toolkit.add_public_directory(config, 'public')
+    def get_validators(self):
+        return dict('name_validator', name_validator)
+
