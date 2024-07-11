@@ -1,6 +1,0 @@
-{% ckan_extends %}
-
-{% block header_account_notlogged %}
-<li>{% link_for _('OAuth Log in'), named_route='user.login' %}</li>
-{{ super() }}
-{% endblock %}
