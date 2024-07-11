@@ -1,4 +1,6 @@
 {% ckan_extends %}
+{% block form %}
+{{ super() }}
 <form action="" method="get">
   <div class="form-actions">
     {% block login_mu_button %}
@@ -6,3 +8,4 @@
     {% endblock %}
   </div>
 </form>
+{% endblock %}
