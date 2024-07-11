@@ -124,8 +124,8 @@ class OAuth2Plugin(plugins.SingletonPlugin):
         controller = OAuth2Controller()
 
         rules = [
-            (u'/user/login', u'user_login', controller.login),
-            (u'/oauth2/callback', u'oauth2_callback', controller.callback)
+            (u'/user/login/oauth2', u'user_login_oauth2', controller.login),
+            (u'/authen-service/OAuthCallback', u'oauth2_callback', controller.callback)
         ]
         for rule in rules:
             blueprint.add_url_rule(*rule)
