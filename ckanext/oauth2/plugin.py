@@ -26,6 +26,7 @@ from ckan.common import g,session
 import ckan.model as model
 from ckan.model.user import User
 from ckan.plugins import toolkit
+from ckan.plugins.toolkit import (abort)
 from flask import Blueprint
 
 from ckanext.oauth2.oauth2 import OAuth2Helper
@@ -188,10 +189,12 @@ class OAuth2Plugin(plugins.SingletonPlugin):
             return None
         user = model.User.by_email(email)
         if user is None:
+            abort(400, _('User not found'))
             log.debug('User not found')
             return None
         # if user is found and user is not active, return None
         if not user.is_active:
+            abort(401, _('User is not active'))
             log.debug('User is not active')
             return None
         # if user is found, and user is active, check valid_plugin_extra
@@ -206,6 +209,7 @@ class OAuth2Plugin(plugins.SingletonPlugin):
         # if user_plugin_extra has 'oauth2' key
         if user_plugin_extra.get('oauth2', None) == True:
             log.debug('User only can be authenticated by oauth2')
+            abort(401, _('User only can be authenticated by OAuth'))
             return None
         # if session "authentication" is not "oauth2", return user object
         return user
