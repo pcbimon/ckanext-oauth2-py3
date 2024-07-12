@@ -202,9 +202,9 @@ class OAuth2Plugin(plugins.SingletonPlugin):
             return None
         # if user is found, session "authentication" is "oauth2" and user is active, return user
         authentication = session.get('authentication', None)
-        if authentication == 'oauth2':
-            valid_plugin_extra = {'oauth2':True}
-            if user_plugin_extra == valid_plugin_extra:
+        valid_plugin_extra = {'oauth2':True}
+        if user_plugin_extra == valid_plugin_extra:
+            if authentication == 'oauth2':
                 return user
             return None
         # if session "authentication" is not "oauth2", return user object
