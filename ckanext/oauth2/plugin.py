@@ -191,6 +191,7 @@ class OAuth2Plugin(plugins.SingletonPlugin):
         if not user_obj:
             user_obj = User.by_email(login)
         log.debug('User extra is dict %s',isinstance(user_obj.plugin_extras, dict)) # type: ignore
+        log.debug('User extra is oauth2 %s',user_obj.plugin_extras.get('oauth2', None)) # type: ignore
         if user_obj is None:
             log.debug('Login failed - username or email %r not found', login)
         elif not user_obj.is_active:
