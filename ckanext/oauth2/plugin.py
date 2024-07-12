@@ -197,10 +197,8 @@ class OAuth2Plugin(plugins.SingletonPlugin):
             log.debug('Login as %r failed - user isn\'t active', login)
         elif not user_obj.validate_password(identity['password']):
             log.debug('Login as %r failed - password not valid', login)
-        elif isinstance(user_obj.plugin_extras, dict): # type: ignore
-            # if user_plugin_extra has 'oauth2' key
-            if user_obj.plugin_extras.get('oauth2', None) == True:
-                log.debug('User only can be authenticated by oauth2')
+        elif not (isinstance(user_obj.plugin_extras, dict) and user_obj.plugin_extras.get('oauth2', None) == True): # type: ignore
+            log.debug('User only can be authenticated by oauth2')
         else:
             return user_obj
         signals.failed_login.send(login)
