@@ -24,14 +24,13 @@ import os
 from ckan import plugins
 from ckan.common import g
 from ckan.plugins import toolkit
-import ckan.logic.auth as logic_auth
 from flask import Blueprint
 
 from ckanext.oauth2.oauth2 import OAuth2Helper
 from ckanext.oauth2.controller import OAuth2Controller
 import ckan.lib.navl.dictization_functions as df
 from ckan.model import (PACKAGE_NAME_MAX_LENGTH)
-from ckan.common import _
+from ckan.common import _,CKANConfig
 from typing import Any
 from ckan.types import (
     Context)
@@ -48,15 +47,6 @@ def _no_permissions(context, msg): # type: ignore
     user = context['user']
     return {'success': False, 'msg': msg.format(user=user)}
 
-@toolkit.auth_sysadmins_check
-def user_generate_apikey(context, data_dict): # type: ignore
-    user = context['user']
-    user_obj = logic_auth.get_user_object(context, data_dict)
-    if user == user_obj.name:
-        # Allow users to update only their own user accounts.
-        return {'success': True}
-    return {'success': False, 'msg': _('User {0} not authorized to update user'
-            ' {1}'.format(user, user_obj.id))}
 
 @toolkit.auth_sysadmins_check
 def user_create(context, data_dict=None): # type: ignore
@@ -122,7 +112,7 @@ class OAuth2Plugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IBlueprint)
     plugins.implements(plugins.IValidators)
 
-    def __init__(self, name=None):
+    def __init__(self, name=None): # type: ignore
         '''Store the OAuth 2 client configuration'''
         log.debug('Init OAuth2 extension')
 
@@ -222,17 +212,16 @@ class OAuth2Plugin(plugins.SingletonPlugin):
             g.user = None
             log.warn('The user is not currently logged...')
 
-    def get_auth_functions(self):
+    def get_auth_functions(self): # type: ignore
         # we need to prevent some actions being authorized.
         return {
             'user_create': user_create,
             'user_update': user_update,
             'user_reset': user_reset,
-            'request_reset': request_reset,
-            'user_generate_apikey': user_generate_apikey
+            'request_reset': request_reset
         }
 
-    def update_config(self, config):
+    def update_config(self, config: 'CKANConfig') -> None:
         # Update our configuration
         self.register_url = os.environ.get("CKAN_OAUTH2_REGISTER_URL", config.get('ckan.oauth2.register_url', None))
         self.reset_url = os.environ.get("CKAN_OAUTH2_RESET_URL", config.get('ckan.oauth2.reset_url', None))
