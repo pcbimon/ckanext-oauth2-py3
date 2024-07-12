@@ -32,31 +32,34 @@ from ckanext.oauth2.controller import OAuth2Controller
 import ckan.lib.navl.dictization_functions as df
 from ckan.model import (PACKAGE_NAME_MAX_LENGTH)
 from ckan.common import _
-from six import string_types
+from typing import Any
+from ckan.types import (
+    Context)
 import re
 Invalid = df.Invalid
 Missing = df.Missing
 missing = df.missing
 # Allow alphanumeric characters, spaces, dashes, and dots
-name_match = re.compile('[a-zA-Z0-9_\-\. ]+$')
+name_match = re.compile('[a-zA-Z0-9_\-\. ]+$') # type: ignore
 log = logging.getLogger(__name__)
 
 
-def _no_permissions(context, msg):
+def _no_permissions(context, msg): # type: ignore
     user = context['user']
     return {'success': False, 'msg': msg.format(user=user)}
 
-def user_generate_apikey(context, data_dict):
+@toolkit.auth_sysadmins_check
+def user_generate_apikey(context, data_dict): # type: ignore
     user = context['user']
     user_obj = logic_auth.get_user_object(context, data_dict)
-    # if user == user_obj.name:
-    #     # Allow users to update only their own user accounts.
-    #     return {'success': True}
+    if user == user_obj.name:
+        # Allow users to update only their own user accounts.
+        return {'success': True}
     return {'success': False, 'msg': _('User {0} not authorized to update user'
             ' {1}'.format(user, user_obj.id))}
 
 @toolkit.auth_sysadmins_check
-def user_create(context, data_dict):
+def user_create(context, data_dict=None): # type: ignore
     log.debug('Checking if the user can be created')
     log.debug('User Request Is Admin? : %s' % (context['auth_user_obj'].sysadmin == True))
     try:
@@ -65,12 +68,12 @@ def user_create(context, data_dict):
             return _no_permissions(context, msg)
         else:
             return {'success': True}
-    except Exception as e:
+    except Exception:
         return _no_permissions(context, msg)
 
 
 @toolkit.auth_sysadmins_check
-def user_update(context, data_dict):
+def user_update(context, data_dict=None): # type: ignore
     log.debug('Checking if the user can be updated')
     log.debug('User Request Is Admin? : %s' % (context['auth_user_obj'].sysadmin == True))
     try:
@@ -79,24 +82,24 @@ def user_update(context, data_dict):
             return _no_permissions(context, msg)
         else:
             return {'success': True}
-    except Exception as e:
+    except Exception:
         return _no_permissions(context, msg)
         
 
 
 @toolkit.auth_sysadmins_check
-def user_reset(context, data_dict):
+def user_reset(context, data_dict): # type: ignore
     msg = toolkit._('Users cannot reset passwords.')
     return _no_permissions(context, msg)
 
 
 @toolkit.auth_sysadmins_check
-def request_reset(context, data_dict):
+def request_reset(context, data_dict): # type: ignore
     msg = toolkit._('Users cannot reset passwords.')
     return _no_permissions(context, msg)
 
-def name_validator(value, context):
-    if not isinstance(value, string_types):
+def name_validator(value: Any, context: Context) -> Any:
+    if not isinstance(value, str):
         raise Invalid(_('Names must be strings'))
 
     # check basic textual rules
@@ -117,6 +120,7 @@ class OAuth2Plugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IAuthFunctions, inherit=True)
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IBlueprint)
+    plugins.implements(plugins.IValidators)
 
     def __init__(self, name=None):
         '''Store the OAuth 2 client configuration'''
@@ -135,7 +139,8 @@ class OAuth2Plugin(plugins.SingletonPlugin):
             (u'/user/login/oauth2', u'user_login_oauth2', controller.login),
             (u'/authen-service/OAuthCallback', u'oauth2_callback', controller.callback),
             (u'/user/logout/oauth2', u'user_logout_oauth2', controller.logout),
-            (u'/user/not_authorized', u'user_not_authorized', controller.not_authorized)
+            (u'/user/not_authorized', u'user_not_authorized', controller.not_authorized),
+            (u'/user/update_api_key', u'user_not_authorized', controller.not_authorized)
 
         ]
         for rule in rules:
