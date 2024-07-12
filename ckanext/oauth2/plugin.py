@@ -203,7 +203,8 @@ class OAuth2Plugin(plugins.SingletonPlugin):
         log.debug('Valid plugin extra: %s' % valid_plugin_extra)
         #print type of valid_plugin_extra
         log.debug('Type of valid_plugin_extra: %s' % type(valid_plugin_extra))
-        if user_plugin_extra == valid_plugin_extra:
+        # if user_plugin_extra has 'oauth2' key
+        if user_plugin_extra.get('oauth2', None) == True:
             log.debug('User only can be authenticated by oauth2')
             return None
         # if session "authentication" is not "oauth2", return user object
