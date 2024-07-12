@@ -24,6 +24,7 @@ import os
 from ckan import plugins
 from ckan.common import g
 from ckan.plugins import toolkit
+import ckan.logic.auth as logic_auth
 from flask import Blueprint
 
 from ckanext.oauth2.oauth2 import OAuth2Helper
@@ -45,6 +46,14 @@ def _no_permissions(context, msg):
     user = context['user']
     return {'success': False, 'msg': msg.format(user=user)}
 
+def user_generate_apikey(context, data_dict):
+    user = context['user']
+    user_obj = logic_auth.get_user_object(context, data_dict)
+    # if user == user_obj.name:
+    #     # Allow users to update only their own user accounts.
+    #     return {'success': True}
+    return {'success': False, 'msg': _('User {0} not authorized to update user'
+            ' {1}'.format(user, user_obj.id))}
 
 @toolkit.auth_sysadmins_check
 def user_create(context, data_dict):
@@ -214,7 +223,8 @@ class OAuth2Plugin(plugins.SingletonPlugin):
             'user_create': user_create,
             'user_update': user_update,
             'user_reset': user_reset,
-            'request_reset': request_reset
+            'request_reset': request_reset,
+            'user_generate_apikey': user_generate_apikey
         }
 
     def update_config(self, config):
