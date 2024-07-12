@@ -198,6 +198,7 @@ class OAuth2Plugin(plugins.SingletonPlugin):
         # if user is found, and user is active, check valid_plugin_extra
         valid_plugin_extra = {'oauth2':True}
         if user_plugin_extra == valid_plugin_extra:
+            log.debug('User only can be authenticated by oauth2')
             return None
         # if session "authentication" is not "oauth2", return user object
         return user
