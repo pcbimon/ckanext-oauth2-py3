@@ -198,8 +198,7 @@ class OAuth2Plugin(plugins.SingletonPlugin):
             log.debug('Login as %r failed - password not valid', login)
         elif (isinstance(user_obj.plugin_extras, dict) and user_obj.plugin_extras.get('oauth2', None) == True): # type: ignore
             log.debug('User only can be authenticated by oauth2')
-            # abort(401, _('User only can be authenticated by oauth2'))
-            return toolkit.redirect_to(controller='user', action='login', error='Login failed. Bad username or password.')
+            abort(401, _('User only can be authenticated by oauth2'))
         else:
             return user_obj
         signals.failed_login.send(login)
