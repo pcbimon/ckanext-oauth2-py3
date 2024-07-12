@@ -22,7 +22,7 @@ import logging
 import os
 
 from ckan import plugins
-from ckan.common import g
+from ckan.common import g,session
 import ckan.model as model
 from ckan.model.user import User
 from ckan.plugins import toolkit
@@ -182,7 +182,7 @@ class OAuth2Plugin(plugins.SingletonPlugin):
             log.warn('The user is not currently logged...')
     def authenticate(self,identity: Mapping[str, Any]) -> Optional[User]:
         log.debug('authenticate')
-        #user_plugin_extra = identity.get('plugin_extra', {})
+        user_plugin_extra = identity.get('plugin_extra', {})
         # ckeck user authentication from OAuth2 service
         log.debug(identity)
         # get user from email
@@ -190,6 +190,22 @@ class OAuth2Plugin(plugins.SingletonPlugin):
         if email is None:
             return None
         user = model.User.by_email(email)
+        # if session "authentication" is "oauth2" and user is not found, return None
+        if user is None:
+            log.debug('User not found')
+            return None
+        # if user is found, session "authentication" is "oauth2" and user is not active, return None
+        if not user.is_active():
+            log.debug('User is not active')
+            return None
+        # if user is found, session "authentication" is "oauth2" and user is active, return user
+        authentication = session.get('authentication', None)
+        if authentication == 'oauth2':
+            valid_plugin_extra = {'oauth2':True}
+            if user_plugin_extra == valid_plugin_extra:
+                return user
+            return None
+        # if session "authentication" is not "oauth2", return user object
         return user
     def get_auth_functions(self): # type: ignore
         # we need to prevent some actions being authorized.

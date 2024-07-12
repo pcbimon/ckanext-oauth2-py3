@@ -50,7 +50,10 @@ class OAuth2Controller:
         # When the user is not logged in, he/she should be redirected to the dashboard when
         # the system cannot get the previous page
         came_from_url = get_previous_page(constants.INITIAL_PAGE)
-
+        # set session "authentication" to "oauth2"
+        session['authentication'] = 'oauth2'
+        session.save()
+        # Redirect to OAuth2 provider login URL
         return self.oauth2helper.challenge(came_from_url)
     def logout(self):
         # Redirect to OAuth2 provider logout URL
