@@ -24,7 +24,7 @@ import os
 from ckan import plugins
 from ckan.common import g
 from ckan.lib.helpers import helper_functions as h
-import ckan.model as model
+from ckan.lib import signals
 from ckan.model.user import User
 from ckan.plugins import toolkit
 from ckan.plugins.toolkit import (abort)
@@ -184,47 +184,27 @@ class OAuth2Plugin(plugins.SingletonPlugin):
             log.warn('The user is not currently logged...')
     def authenticate(self,identity: Mapping[str, Any]) -> Optional[User]:
         log.debug('authenticate')
-        # get user from email
-        email = identity.get('login', None)
-        if email is None:
+        if not ('login' in identity and 'password' in identity):
             return None
-        # get user from name
-        user = model.User.by_name(email)
-        if user is None:
-            user = model.User.by_email(email)
-            if user is None:
-                err = _(u"Login failed. Bad username or password.")
-                h.flash_error(err)
-                return toolkit.redirect_to(controller='user', action='login')
-                # abort(400, _('User not found'))
-                # log.debug('User not found')
-                return None
-        # if user is found and user is not active, return None
-        if not user.is_active:
-            abort(401, _('User is not active'))
-            log.debug('User is not active')
-            return None
-        # if user is found, and user is active, check valid_plugin_extra
-        user_plugin_extra = user.plugin_extras
-        valid_plugin_extra = {'oauth2':True}
-        log.debug('User plugin extra: %s' % user_plugin_extra)
-        #print type of user_plugin_extra
-        log.debug('Type of user_plugin_extra: %s' % type(user_plugin_extra))
-        log.debug('Valid plugin extra: %s' % valid_plugin_extra)
-        #print type of valid_plugin_extra
-        log.debug('Type of valid_plugin_extra: %s' % type(valid_plugin_extra))
-        # if user_plugin_extra is not NoneType
-        if isinstance(user_plugin_extra, dict): # type: ignore
+        login = identity['login']
+        user_obj = User.by_name(login)
+        if not user_obj:
+            user_obj = User.by_email(login)
+
+        if user_obj is None:
+            log.debug('Login failed - username or email %r not found', login)
+        elif not user_obj.is_active:
+            log.debug('Login as %r failed - user isn\'t active', login)
+        elif not user_obj.validate_password(identity['password']):
+            log.debug('Login as %r failed - password not valid', login)
+        elif isinstance(user_obj.plugin_extras, dict): # type: ignore
             # if user_plugin_extra has 'oauth2' key
-            if user_plugin_extra.get('oauth2', None) == True:
+            if user_obj.plugin_extras.get('oauth2', None) == True:
                 log.debug('User only can be authenticated by oauth2')
-                err = _(u"User only can be authenticated by oauth2")
-                h.flash_error(err)
-                return toolkit.redirect_to(controller='user', action='login')
-                # abort(401, _('User only can be authenticated by OAuth'))
-                return None
-        # if session "authentication" is not "oauth2", return user object
-        return user
+        else:
+            return user_obj
+        signals.failed_login.send(login)
+        return None
     def get_auth_functions(self): # type: ignore
         # we need to prevent some actions being authorized.
         return {
