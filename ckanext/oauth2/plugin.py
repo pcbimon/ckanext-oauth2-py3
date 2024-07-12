@@ -191,7 +191,7 @@ class OAuth2Plugin(plugins.SingletonPlugin):
             log.debug('User not found')
             return None
         # if user is found and user is not active, return None
-        if not user.is_active():
+        if not user.is_active:
             log.debug('User is not active')
             return None
         # if user is found, and user is active, check valid_plugin_extra
