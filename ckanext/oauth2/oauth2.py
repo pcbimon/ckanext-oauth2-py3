@@ -23,6 +23,7 @@
 
 import base64
 import ckan.model as model
+from ckan.model.user import User
 from . import db
 import json
 import logging
@@ -35,7 +36,7 @@ from oauthlib.oauth2.rfc6749.errors import InsufficientScopeError
 import requests
 from requests_oauthlib import OAuth2Session
 import six
-
+from typing import Any, Optional
 import jwt
 
 from . import constants
@@ -92,7 +93,7 @@ class OAuth2Helper(object):
         elif self.scope == "":
             self.scope = None
 
-    def challenge(self, came_from_url):
+    def challenge(self, came_from_url: str):
         # This function is called by the log in function when the user is not logged in
         state = generate_state(came_from_url)
         oauth = OAuth2Session(self.client_id, redirect_uri=self.redirect_uri, scope=self.scope, state=state)
@@ -146,7 +147,7 @@ class OAuth2Helper(object):
 
         return token
 
-    def identify(self, token):
+    def identify(self, token: str) -> str:
 
         if self.jwt_enable:
 
@@ -185,22 +186,18 @@ class OAuth2Helper(object):
         model.Session.commit()
         model.Session.remove()
 
-        return user.name
+        return user.name # type: ignore
 
-    def user_json(self, user_data):
+    def user_json(self, user_data: Any) -> Optional[User]:
         log.debug(f'user_json: {user_data}')
         email = user_data[self.profile_api_mail_field]
         user_name = user_data[self.profile_api_user_field]
 
         # In CKAN can exists more than one user associated with the same email
         # Some providers, like Google and FIWARE only allows one account per email
-        user = None
-        users = model.User.by_email(email)
-        if users is None:
+        user = model.User.by_email(email)
+        if user is None:
             raise InsufficientScopeError('User with email %s does not exist' % email)
-        if len(users) == 1:
-            user = users[0]
-
         # Now we update his/her user_name with the one provided by the OAuth2 service
         # In the future, users will be obtained based on this field
         user.name = user_name
@@ -212,11 +209,10 @@ class OAuth2Helper(object):
         # Update sysadmin status
         if self.profile_api_groupmembership_field != "" and self.profile_api_groupmembership_field in user_data:
             user.sysadmin = self.sysadmin_group_name in user_data[self.profile_api_groupmembership_field]
-        # Add plugin_extras columns
-        user.plugin_extras = dict('oauth2', user_data)
+
         return user
 
-    def _get_rememberer(self, environ):
+    def _get_rememberer(self, environ): # type: ignore
         plugins = environ.get('repoze.who.plugins', {})
         return plugins.get(self.rememberer_name)
 
@@ -240,7 +236,7 @@ class OAuth2Helper(object):
         came_from = get_came_from(state)
         toolkit.redirect_to(came_from)
 
-    def get_stored_token(self, user_name):
+    def get_stored_token(self, user_name: str): # type: ignore
         user_token = db.UserToken.by_user_name(user_name=user_name)
         if user_token:
             return {
@@ -250,7 +246,7 @@ class OAuth2Helper(object):
                 'token_type': user_token.token_type
             }
 
-    def update_token(self, user_name, token):
+    def update_token(self, user_name:str, token:str):
 
         user_token = db.UserToken.by_user_name(user_name=user_name)
         # Create the user if it does not exist
@@ -270,7 +266,7 @@ class OAuth2Helper(object):
         model.Session.add(user_token)
         model.Session.commit()
 
-    def refresh_token(self, user_name):
+    def refresh_token(self, user_name:str):
         token = self.get_stored_token(user_name)
         if token:
             client = OAuth2Session(self.client_id, token=token, scope=self.scope)
