@@ -182,7 +182,7 @@ class OAuth2Plugin(plugins.SingletonPlugin):
             log.warn('The user is not currently logged...')
     def authenticate(self,identity: Mapping[str, Any]) -> Optional[User]:
         log.debug('authenticate')
-        user_plugin_extra = identity.get('plugin_extra', {})
+        user_plugin_extra = identity.get('plugin_extras', {})
         # get user from email
         email = identity.get('email', None)
         if email is None:
