@@ -247,6 +247,6 @@ class OAuth2Plugin(plugins.SingletonPlugin):
         plugins.toolkit.add_public_directory(config, 'public')
     def get_validators(self):
         return {
-            'name_validator', name_validator
+            'name_validator': name_validator
         }
 
