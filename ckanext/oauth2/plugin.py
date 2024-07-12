@@ -138,39 +138,6 @@ class OAuth2Plugin(plugins.SingletonPlugin):
         log.debug('Blueprint rules added')
         return blueprint
 
-    # def before_map(self, m):
-    #     log.debug('Setting up the redirections to the OAuth2 service')
-
-    #     m.connect('/user/login/oauth2',
-    #               controller='ckanext.oauth2.controller:OAuth2Controller',
-    #               action='login')
-
-    #     # We need to handle petitions received to the Callback URL
-    #     # since some error can arise and we need to process them
-    #     m.connect('/authen-service/OAuthCallback',
-    #               controller='ckanext.oauth2.controller:OAuth2Controller',
-    #               action='callback')
-    #     m.connect('/user/logout/oauth2',
-    #               controller='ckanext.oauth2.controller:OAuth2Controller',
-    #               action='logout')
-    #     m.connect('/user/not_authorized',
-    #               controller='ckanext.oauth2.controller:OAuth2Controller',
-    #               action='not_authorized')
-
-    #     # Redirect the user to the OAuth service register page
-    #     if self.register_url:
-    #         m.redirect('/user/register', self.register_url)
-
-    #     # Redirect the user to the OAuth service reset page
-    #     if self.reset_url:
-    #         m.redirect('/user/reset', self.reset_url)
-
-    #     # Redirect the user to the OAuth service reset page
-    #     if self.edit_url:
-    #         m.redirect('/user/edit/{user}', self.edit_url)
-
-    #     return m
-
     def identify(self):
         log.debug('identify')
 
