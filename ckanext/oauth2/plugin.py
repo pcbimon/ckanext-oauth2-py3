@@ -23,6 +23,8 @@ import os
 
 from ckan import plugins
 from ckan.common import g
+import ckan.model as model
+from ckan.model.user import User
 from ckan.plugins import toolkit
 from flask import Blueprint
 
@@ -31,7 +33,7 @@ from ckanext.oauth2.controller import OAuth2Controller
 import ckan.lib.navl.dictization_functions as df
 from ckan.model import (PACKAGE_NAME_MAX_LENGTH)
 from ckan.common import _,CKANConfig
-from typing import Any
+from typing import Any, Mapping, Optional
 from ckan.types import (
     Context)
 import re
@@ -178,7 +180,17 @@ class OAuth2Plugin(plugins.SingletonPlugin):
         else:
             g.user = None
             log.warn('The user is not currently logged...')
-
+    def authenticate(self,identity: Mapping[str, Any]) -> Optional[User]:
+        log.debug('authenticate')
+        #user_plugin_extra = identity.get('plugin_extra', {})
+        # ckeck user authentication from OAuth2 service
+        log.debug(identity)
+        # get user from email
+        email = identity.get('email', None)
+        if email is None:
+            return None
+        user = model.User.by_email(email)
+        return user
     def get_auth_functions(self): # type: ignore
         # we need to prevent some actions being authorized.
         return {
