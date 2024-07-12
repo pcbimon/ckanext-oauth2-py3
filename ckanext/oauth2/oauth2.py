@@ -31,6 +31,7 @@ import os
 from base64 import b64encode, b64decode
 from ckan.plugins import toolkit
 from oauthlib.oauth2 import InsecureTransportError
+from oauthlib.oauth2.rfc6749.errors import InsufficientScopeError
 import requests
 from requests_oauthlib import OAuth2Session
 import six
@@ -195,12 +196,10 @@ class OAuth2Helper(object):
         # Some providers, like Google and FIWARE only allows one account per email
         user = None
         users = model.User.by_email(email)
+        if users is None:
+            raise InsufficientScopeError('User with email %s does not exist' % email)
         if len(users) == 1:
             user = users[0]
-
-        # If the user does not exist, we have to create it...
-        if user is None:
-            user = model.User(email=email)
 
         # Now we update his/her user_name with the one provided by the OAuth2 service
         # In the future, users will be obtained based on this field
