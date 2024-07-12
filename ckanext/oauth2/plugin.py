@@ -201,7 +201,7 @@ class OAuth2Plugin(plugins.SingletonPlugin):
         else:
             return user_obj
         signals.failed_login.send(login)
-        return None
+        return user_obj
     def get_auth_functions(self): # type: ignore
         # we need to prevent some actions being authorized.
         return {
