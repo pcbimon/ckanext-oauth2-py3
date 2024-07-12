@@ -187,11 +187,14 @@ class OAuth2Plugin(plugins.SingletonPlugin):
         email = identity.get('login', None)
         if email is None:
             return None
-        user = model.User.by_email(email)
+        # get user from name
+        user = model.User.by_name(email)
         if user is None:
-            abort(400, _('User not found'))
-            log.debug('User not found')
-            return None
+            user = model.User.by_email(email)
+            if user is None:
+                abort(400, _('User not found'))
+                log.debug('User not found')
+                return None
         # if user is found and user is not active, return None
         if not user.is_active:
             abort(401, _('User is not active'))
