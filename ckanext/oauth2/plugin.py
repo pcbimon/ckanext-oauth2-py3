@@ -185,6 +185,8 @@ class OAuth2Plugin(plugins.SingletonPlugin):
         user_plugin_extra = identity.get('plugin_extra', {})
         # ckeck user authentication from OAuth2 service
         log.debug(identity)
+        # debug session authentication
+        log.debug('Session authentication: %s' % session.get('authentication', None))
         # get user from email
         email = identity.get('email', None)
         if email is None:
