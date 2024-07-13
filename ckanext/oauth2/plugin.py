@@ -132,7 +132,7 @@ class OAuth2Plugin(plugins.SingletonPlugin):
         rules = [
             (u'/user/oauth2/login', u'user_login_oauth2', controller.login),
             (u'/authen-service/OAuthCallback', u'oauth2_callback', controller.callback),
-            (u'/user/oauth2/logut', u'user_logout_oauth2', controller.logout),
+            (u'/user/oauth2/logout', u'user_logout_oauth2', controller.logout),
             (u'/user/not_authorized', u'user_not_authorized', controller.not_authorized)
 
         ]
