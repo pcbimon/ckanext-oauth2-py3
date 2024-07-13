@@ -130,11 +130,10 @@ class OAuth2Plugin(plugins.SingletonPlugin):
         controller = OAuth2Controller()
 
         rules = [
-            (u'/user/login/oauth2', u'user_login_oauth2', controller.login),
+            (u'/user/oauth2/login', u'user_login_oauth2', controller.login),
             (u'/authen-service/OAuthCallback', u'oauth2_callback', controller.callback),
-            (u'/user/logout/oauth2', u'user_logout_oauth2', controller.logout),
-            (u'/user/not_authorized', u'user_not_authorized', controller.not_authorized),
-            (u'/user/update_api_key', u'user_not_authorized', controller.not_authorized)
+            (u'/user/oauth2/logut', u'user_logout_oauth2', controller.logout),
+            (u'/user/not_authorized', u'user_not_authorized', controller.not_authorized)
 
         ]
         for rule in rules:
