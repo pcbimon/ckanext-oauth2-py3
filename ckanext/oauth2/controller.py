@@ -57,7 +57,7 @@ class OAuth2Controller:
         return self.oauth2helper.challenge(came_from_url)
     def logout(self):
         # Redirect to OAuth2 provider logout URL
-        self.oauth2helper.logout()
+        return self.oauth2helper.logout()
     def not_authorized(self):
         return toolkit.render('not_authorized.html')
     def callback(self):
