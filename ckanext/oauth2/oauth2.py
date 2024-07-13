@@ -114,7 +114,7 @@ class OAuth2Helper(object):
                 toolkit.response.headers.add(header, value)
             log.info('User %s logged out' % user_name)
         # Redirect to the logout URL
-        url = self.logout_url+'?post_logout_redirect_uri='+self.logout_redirect.encode('utf-8')
+        url = self.logout_url+'?post_logout_redirect_uri='+self.logout_redirect
         log.debug('Logout: Redirecting to page {0}'.format(url))
         return toolkit.redirect_to(url.encode('utf-8'))
     def get_token(self):
