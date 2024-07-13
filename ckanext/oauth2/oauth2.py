@@ -116,7 +116,7 @@ class OAuth2Helper(object):
         # Redirect to the logout URL
         url = self.logout_url+'?post_logout_redirect_uri='+self.logout_redirect
         log.debug('Logout: Redirecting to page {0}'.format(url))
-        return toolkit.redirect_to(url.encode('utf-8'))
+        return toolkit.redirect_to(url)
     def get_token(self):
         oauth = OAuth2Session(self.client_id, redirect_uri=self.redirect_uri, scope=self.scope)
 
