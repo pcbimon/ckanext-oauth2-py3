@@ -30,12 +30,13 @@ from ckan.plugins import toolkit
 from ckan.plugins.toolkit import (abort)
 from flask import Blueprint
 
+from ckan.types.model import Model
 from ckanext.oauth2.oauth2 import OAuth2Helper
 from ckanext.oauth2.controller import OAuth2Controller
 import ckan.lib.navl.dictization_functions as df
 from ckan.model import (PACKAGE_NAME_MAX_LENGTH)
 from ckan.common import _,CKANConfig
-from typing import Any, Mapping, Optional
+from typing import Any, Mapping, Optional, Union, cast
 from ckan.types import (
     Context)
 import re
@@ -45,7 +46,8 @@ missing = df.missing
 # Allow alphanumeric characters, spaces, dashes, and dots
 name_match = re.compile('[a-zA-Z0-9_\-\. ]+$') # type: ignore
 log = logging.getLogger(__name__)
-
+from flask_login import current_user as _cu
+current_user = cast(Union["Model.User", "Model.AnonymousUser"], _cu)
 
 def _no_permissions(context, msg): # type: ignore
     user = context['user']
@@ -149,7 +151,6 @@ class OAuth2Plugin(plugins.SingletonPlugin):
             if new_token:
                 toolkit.c.usertoken = new_token
 
-        environ = toolkit.request.environ
         apikey = toolkit.request.headers.get(self.authorization_header, '')
         user_name = None
 
@@ -168,8 +169,8 @@ class OAuth2Plugin(plugins.SingletonPlugin):
                 pass
 
         # If the authentication via API fails, we can still log in the user using session.
-        if user_name is None and 'repoze.who.identity' in environ:
-            user_name = environ['repoze.who.identity']['repoze.who.userid']
+        if current_user.is_authenticated:
+            user_name = current_user.name
             log.info('User %s logged using session' % user_name)
 
         # If we have been able to log in the user (via API or Session)
