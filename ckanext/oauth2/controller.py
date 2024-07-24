@@ -64,7 +64,7 @@ class OAuth2Controller:
             user_name = self.oauth2helper.identify(token)
             self.oauth2helper.remember(user_name)
             self.oauth2helper.update_token(user_name, token)
-            self.oauth2helper.redirect_from_callback()
+            return self.oauth2helper.redirect_from_callback()
         except InsufficientScopeError as e:
             redirect_url = '/user/not_authorized'
             # toolkit.response.status_int = e.status_code
