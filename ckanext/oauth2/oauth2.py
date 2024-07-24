@@ -36,11 +36,18 @@ from oauthlib.oauth2.rfc6749.errors import InsufficientScopeError
 import requests
 from requests_oauthlib import OAuth2Session
 import six
-from typing import Any, Optional
+from typing import (
+    Any, Optional, cast, Union)
+from ckan.types import Model
 import jwt
 
 from . import constants
-
+from flask_login import login_user as _login_user, logout_user as _logout_user
+from flask_login import current_user as _cu
+from ckan.views.user import rotate_token
+current_user = cast(Union["Model.User", "Model.AnonymousUser"], _cu)
+login_user = _login_user
+logout_user = _logout_user
 
 log = logging.getLogger(__name__)
 
@@ -102,16 +109,11 @@ class OAuth2Helper(object):
         # CKAN 2.6 only supports bytes
         return toolkit.redirect_to(auth_url)
     def logout(self):
-        environ = toolkit.request.environ
         user_name = None
-        if user_name is None and 'repoze.who.identity' in environ:
-            user_name = environ['repoze.who.identity']['repoze.who.userid']
-            log.info('User %s logged using session' % user_name)
-        if user_name is not None:
-            identity = {'repoze.who.userid': user_name}
-            headers = self._get_rememberer(environ).forget(environ,identity)
-            for header, value in headers:
-                toolkit.response.headers.add(header, value)
+        if current_user.is_authenticated:
+            log.info('User %s logged using session' % current_user.name)
+        if current_user.is_authenticated:
+            logout_user()
             log.info('User %s logged out' % user_name)
         # Redirect to the logout URL
         url = self.logout_url+'?post_logout_redirect_uri='+self.logout_redirect
@@ -213,10 +215,9 @@ class OAuth2Helper(object):
         return user
 
     def _get_rememberer(self, environ): # type: ignore
-        log.debug('Repoze OAuth get rememberer')
-        log.debug(environ)
-        plugins = environ.get('ckan.lib.repoze_plugins', {})
-        return plugins.get(self.rememberer_name)
+        log.debug('Get Current User')
+        log.debug(current_user)
+        return current_user
 
     def remember(self, user_name: str):
         '''
@@ -225,10 +226,9 @@ class OAuth2Helper(object):
         This method simply delegates to another IIdentifier plugin if configured.
         '''
         log.debug('Repoze OAuth remember')
-        environ = toolkit.request.environ
-        rememberer = self._get_rememberer(environ)
-        identity = {'repoze.who.userid': user_name}
-        rememberer.remember(environ, identity)
+        user_obj = model.User.by_name(user_name)
+        login_user(user_obj)
+        rotate_token()
         # for header, value in headers:
         #     toolkit.response.headers.add(header, value)
 
