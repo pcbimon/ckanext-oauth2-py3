@@ -234,9 +234,9 @@ class OAuth2Helper(object):
 
     def redirect_from_callback(self):
         '''Redirect to the callback URL after a successful authentication.'''
-        state = toolkit.request.params.get('state')
-        came_from = get_came_from(state)
-        toolkit.redirect_to(came_from)
+        # state = toolkit.request.params.get('state')
+        # came_from = get_came_from(state)
+        return toolkit.redirect_to(constants.INITIAL_PAGE)
 
     def get_stored_token(self, user_name: str): # type: ignore
         user_token = db.UserToken.by_user_name(user_name=user_name)
