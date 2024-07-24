@@ -213,7 +213,7 @@ class OAuth2Helper(object):
         return user
 
     def _get_rememberer(self, environ): # type: ignore
-        plugins = environ.get('repoze.who.plugins', {})
+        plugins = environ.get('ckan.lib.repoze_plugins', {})
         return plugins.get(self.rememberer_name)
 
     def remember(self, user_name: str):
