@@ -151,7 +151,7 @@ class OAuth2Plugin(plugins.SingletonPlugin):
                 toolkit.redirect_to(controller='user', action='logout')
             if (isinstance(user_obj.plugin_extras, dict) and user_obj.plugin_extras.get('oauth2', None) == True): # type: ignore
                 log.debug('go to oauth2 logout')
-                toolkit.redirect_to(controller='ckanext.oauth2.controller:OAuth2Controller', action='logout')
+                toolkit.redirect_to(controller='OAuth2Plugin', action='user_logout_oauth2')
             else:
                 log.debug('go to normal logout')
                 toolkit.redirect_to(controller='user', action='logout')
