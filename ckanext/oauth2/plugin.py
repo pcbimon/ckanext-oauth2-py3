@@ -148,13 +148,13 @@ class OAuth2Plugin(plugins.SingletonPlugin):
             user_obj = User.by_name(current_user.name)
             if user_obj is None:
                 log.debug('go to normal logout')
-                toolkit.redirect_to(controller='user', action='logout')
+                return toolkit.redirect_to(controller='user', action='logout')
             if (isinstance(user_obj.plugin_extras, dict) and user_obj.plugin_extras.get('oauth2', None) == True): # type: ignore
                 log.debug('go to oauth2 logout')
-                toolkit.redirect_to(controller='OAuth2Plugin', action='user_logout_oauth2')
+                return toolkit.redirect_to(controller='OAuth2Plugin', action='user_logout_oauth2')
             else:
                 log.debug('go to normal logout')
-                toolkit.redirect_to(controller='user', action='logout')
+                return toolkit.redirect_to(controller='user', action='logout')
     def identify(self):
         log.debug('identify')
 
