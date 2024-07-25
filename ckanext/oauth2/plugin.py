@@ -142,7 +142,15 @@ class OAuth2Plugin(plugins.SingletonPlugin):
             blueprint.add_url_rule(*rule)
         log.debug('Blueprint rules added')
         return blueprint
-
+    def logout(self):
+        log.debug('logout')
+        if current_user.is_authenticated:
+            if (isinstance(user_obj.plugin_extras, dict) and user_obj.plugin_extras.get('oauth2', None) == True): # type: ignore
+                log.debug('go to oauth2 logout')
+                toolkit.redirect_to(controller='ckanext.oauth2.controller:OAuth2Controller', action='logout')
+            else:
+                log.debug('go to normal logout')
+                toolkit.redirect_to(controller='user', action='logout')
     def identify(self):
         log.debug('identify')
 
