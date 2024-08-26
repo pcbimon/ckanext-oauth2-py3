@@ -18,11 +18,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with OAuth2 CKAN Extension.  If not, see <http://www.gnu.org/licenses/>.
 
-import re
 
 from setuptools import setup, find_packages
 
-from .ckanext.oauth2 import __version__, __description__
+from ckanext.oauth2 import __version__, __description__
 
 
 PYPI_RST_FILTERS = (
