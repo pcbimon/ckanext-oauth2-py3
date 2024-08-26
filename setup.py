@@ -22,7 +22,7 @@ import re
 
 from setuptools import setup, find_packages
 
-from ckanext.oauth2 import __version__, __description__
+from .ckanext.oauth2 import __version__, __description__
 
 
 PYPI_RST_FILTERS = (
