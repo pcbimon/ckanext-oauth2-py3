@@ -21,7 +21,7 @@
 
 from setuptools import setup, find_packages
 
-from ckanext.oauth2 import __version__, __description__
+# from ckanext.oauth2 import __version__, __description__
 
 
 PYPI_RST_FILTERS = (
@@ -36,8 +36,8 @@ PYPI_RST_FILTERS = (
 
 setup(
     name='ckanext-oauth2',
-    version=__version__,
-    description=__description__,
+    version='0.8.0',
+    description='OAuth2 support for CKAN',
     long_description='''
     The OAuth2 extension allows site visitors to login through an OAuth2 server.
     ''',
