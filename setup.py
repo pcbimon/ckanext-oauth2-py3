@@ -45,7 +45,7 @@ setup(
     author='Aitor Magán',
     author_email='amagan@conwet.com',
     url='https://github.com/conwetlab/ckanext-oauth2',
-    download_url='https://github.com/conwetlab/ckanext-oauth2/tarball/v' + __version__,
+    download_url='https://github.com/conwetlab/ckanext-oauth2/tarball/v0.8.0',
     license='',
     packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
     namespace_packages=['ckanext'],
